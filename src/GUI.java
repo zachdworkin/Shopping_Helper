@@ -4,8 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
 import java.io.IOException;
+import java.text.NumberFormat;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
@@ -98,10 +98,10 @@ public class GUI extends JFrame {
     }
 
     private class StepAction extends AbstractAction {
-        private int number;
+        private int direction;
 
         public StepAction(int direction) {
-            this.number = direction;
+            this.direction = direction;
         }
 
         public void actionPerformed(ActionEvent event) {
@@ -116,9 +116,65 @@ public class GUI extends JFrame {
     }
 
     private class InputRecipeAction extends AbstractAction{
+        private Recipe recipe;
         public InputRecipeAction() {}
 
         public void actionPerformed(ActionEvent event) {
+            String recipeName = getRecipeNameFromUser();
+            if (recipeName == null) return;
+            this.recipe = new Recipe(recipeName);
+//            getRecipeIngredientsFromUser();
+        }
+
+        public void getRecipeIngredientsFromUser() {
+            JTextField number = new JTextField();
+            JComboBox measurementType = new JComboBox(new Object[]{"Pound(s)", "Ounce(s)", "Teaspoon(s)",
+                    "Tablespoon(s)", "Breast(s)", "Fillet(s)", "Chop(s)",      "Bag(s)", "Cup(s)"});
+            Object[] message = {
+                    number,
+                    measurementType,
+            };
+
+            int result = JOptionPane.showConfirmDialog(null, message,
+                    "Input Ingredient", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+                return;
+            }
+
+            double measureValue;
+            try {
+                measureValue = Double.parseDouble(number.getText());
+                if (measureValue < 0)
+                    throw new NumberFormatException();
+
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(null, "Not a valid input.");
+            }
+
+//            this.ingredients.add()
+        }
+
+        private String getRecipeNameFromUser() {
+            JTextField recipeName = new JTextField();
+            Object[] message = {
+                    "Input Recipe Name",
+                    recipeName ,
+            };
+
+            String temp = null;
+            while (temp == null) {
+                int result = JOptionPane.showConfirmDialog(null, message,
+                        "Input Recipe", JOptionPane.OK_CANCEL_OPTION);
+
+                if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+                    return null;
+                }
+
+                temp = recipeName.getText();
+            }
+
+            return recipeName.getText();
         }
     }
 }
