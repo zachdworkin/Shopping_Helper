@@ -5,21 +5,20 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
-import java.text.NumberFormat;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-
-
 public class GUI extends JFrame {
 
-    private final JPanel buttonPanel;
+    private boolean currentPanel;
+    private JPanel buttonPanel;
+    private RecipePane recipePanel;
     private final JButton inputRecipe = new JButton("Input Recipe");
     private JLabel displayedImage;
     private ImageComponent imageComponent;
 
     public GUI () {
-        this.buttonPanel = new JPanel();
+        currentPanel = true;
         initAll();
         render();
     }
@@ -43,10 +42,29 @@ public class GUI extends JFrame {
 
     private void initAll() {
         initializeLayout();
-        initializeButtonPanel();
-        initializeKeystrokeActions();
         initImageComponent();
+        initializePanels();
+        initializeKeystrokeActions();
         addActionListeners();
+    }
+
+    private void initializeLayout() {
+        GridBagLayout layout = new GridBagLayout();
+        setLayout(layout);
+        SimpleAttributeSet as = new SimpleAttributeSet();
+        StyleConstants.setAlignment(as, StyleConstants.ALIGN_LEFT);
+    }
+
+    private void initializePanels() {
+        initializeButtonPanel();
+        recipePanel = new RecipePane();
+    }
+
+    private void initializeButtonPanel() {
+        buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.add(inputRecipe);
+        this.getContentPane().add(buttonPanel);
     }
 
     private void addActionListeners() {
@@ -62,32 +80,33 @@ public class GUI extends JFrame {
 
         imageComponent.setBorder(BorderFactory.createEtchedBorder());
         displayedImage = new JLabel();
-        add(displayedImage);
+        this.getContentPane().add(displayedImage);
     }
 
     private void initializeKeystrokeActions() {
-        InputMap imap = buttonPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        InputMap imap = displayedImage.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         imap.put(KeyStroke.getKeyStroke("RIGHT"), "panel.next");
         imap.put(KeyStroke.getKeyStroke("LEFT"), "panel.prev");
         AbstractAction nextFrameAction = new StepAction(1);
         AbstractAction previousFrameAction = new StepAction(-1);
 
-        ActionMap actionMap = buttonPanel.getActionMap();
+        ActionMap actionMap = displayedImage.getActionMap();
         actionMap.put("panel.next", nextFrameAction);
         actionMap.put("panel.prev", previousFrameAction);
     }
 
-    private void initializeButtonPanel() {
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        buttonPanel.add(inputRecipe);
-        add(buttonPanel);
-    }
+    private void swapPanels() {
+        Container container = this.getContentPane();
+        if (!currentPanel) {
+            container.remove(buttonPanel);
+            container.add(recipePanel);
+        } else {
+            container.remove(recipePanel);
+            container.add(buttonPanel);
+        }
 
-    private void initializeLayout() {
-        GridBagLayout layout = new GridBagLayout();
-        setLayout(layout);
-        SimpleAttributeSet as = new SimpleAttributeSet();
-        StyleConstants.setAlignment(as, StyleConstants.ALIGN_LEFT);
+        render();
+        currentPanel = !currentPanel;
     }
 
     private void render() {
@@ -98,83 +117,31 @@ public class GUI extends JFrame {
     }
 
     private class StepAction extends AbstractAction {
-        private int direction;
+        private final int direction;
 
         public StepAction(int direction) {
             this.direction = direction;
         }
 
         public void actionPerformed(ActionEvent event) {
-            try {
-                imageComponent.setImage("cook_book1.png");
-            } catch (IOException | IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(null, "Image not found");
+            if (direction == 1) {
+                try {
+                    imageComponent.setImage("cook_book1.png");
+                } catch (IOException | IllegalArgumentException e) {
+                    JOptionPane.showMessageDialog(null, "Image not found");
+                }
             }
 
             render();
         }
     }
 
-    private class InputRecipeAction extends AbstractAction{
-        private Recipe recipe;
-        public InputRecipeAction() {}
+    private class InputRecipeAction extends AbstractAction {
+        public InputRecipeAction() {
+        }
 
         public void actionPerformed(ActionEvent event) {
-            String recipeName = getRecipeNameFromUser();
-            if (recipeName == null) return;
-            this.recipe = new Recipe(recipeName);
-//            getRecipeIngredientsFromUser();
-        }
-
-        public void getRecipeIngredientsFromUser() {
-            JTextField number = new JTextField();
-            JComboBox measurementType = new JComboBox(new Object[]{"Pound(s)", "Ounce(s)", "Teaspoon(s)",
-                    "Tablespoon(s)", "Breast(s)", "Fillet(s)", "Chop(s)",      "Bag(s)", "Cup(s)"});
-            Object[] message = {
-                    number,
-                    measurementType,
-            };
-
-            int result = JOptionPane.showConfirmDialog(null, message,
-                    "Input Ingredient", JOptionPane.OK_CANCEL_OPTION);
-
-            if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
-                return;
-            }
-
-            double measureValue;
-            try {
-                measureValue = Double.parseDouble(number.getText());
-                if (measureValue < 0)
-                    throw new NumberFormatException();
-
-            } catch (NumberFormatException nfe) {
-                JOptionPane.showMessageDialog(null, "Not a valid input.");
-            }
-
-//            this.ingredients.add()
-        }
-
-        private String getRecipeNameFromUser() {
-            JTextField recipeName = new JTextField();
-            Object[] message = {
-                    "Input Recipe Name",
-                    recipeName ,
-            };
-
-            String temp = null;
-            while (temp == null) {
-                int result = JOptionPane.showConfirmDialog(null, message,
-                        "Input Recipe", JOptionPane.OK_CANCEL_OPTION);
-
-                if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
-                    return null;
-                }
-
-                temp = recipeName.getText();
-            }
-
-            return recipeName.getText();
+            swapPanels();
         }
     }
 }

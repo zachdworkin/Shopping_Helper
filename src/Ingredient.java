@@ -1,7 +1,8 @@
 public class Ingredient {
-    private String measurementType;
-    private double measurementAmount;
-    private String name;
+    private final String measurementType;
+    private final double measurementAmount;
+    private final String name;
+
 
     public Ingredient(String measurementType, double measurementAmount, String name) {
         this.measurementType = measurementType;
@@ -9,15 +10,7 @@ public class Ingredient {
         this.name = name;
     }
 
-    public double getMeasurementAmount() {
-        return measurementAmount;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getMeasurementType() {
-        return measurementType;
+    public String toString() {
+        return "" + measurementAmount + " " + measurementType + ": " + name;
     }
 }
