@@ -12,6 +12,7 @@ public class GUI extends JFrame {
     private ArrayList<Recipe> recipes;
 
     private JPanel buttonPanel;
+    private RecipePane recipePanel;
 
     private final JButton inputRecipe = new JButton("Input Recipe");
     private final JButton next = new JButton("Next");
@@ -104,11 +105,23 @@ public class GUI extends JFrame {
         dialog = new JDialog(this);
         dialog.setSize(1000, 1000);
 
-        RecipePane recipePanel = new RecipePane();
+        recipePanel = new RecipePane();
         dialog.add(recipePanel);
         dialog.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e){
-                //recipePanel.finalizeRecipe();
+                if (recipePanel.isFinalized()) {
+                    System.out.println("finalized");
+                    Recipe recipe = recipePanel.getRecipe();
+                    try {
+                        imageComponent.createImageFromText(imageComponent.getResourcesDirectory().resolve("recipes").resolve(recipe.getName() + ".recipe"));
+                    } catch (IOException ioException) {
+                        JOptionPane.showMessageDialog(null, "Could not generate png from text");
+                    }
+
+                    recipes.add(recipe);
+                }
+
+                initializeDialog();
             }
         });
     }
@@ -161,16 +174,30 @@ public class GUI extends JFrame {
                 }
             }
         }
-
-
     }
 
     private void render() {
+        if (imageComponent.getImage() == null) {
+            JOptionPane.showMessageDialog(null, "Recipe Image Not Found. Using default image");
+            try {
+                imageComponent.setImage(imageComponent.getImageFromFile("cook_book.png"));
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Recipe Image Not Found.");
+            }
+        }
+
         imageLabel.setIcon(new ImageIcon(imageComponent.getImage()));
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         this.setVisible(true);
         revalidate();
         repaint();
+    }
+
+    private void updateViewImageButton() {
+        if (viewRecipe.getText().equals("View Recipe Image"))
+            viewRecipe.setText("View Recipe");
+        else
+            viewRecipe.setText("View Recipe Image");
     }
 
     private class StepAction extends AbstractAction {
@@ -185,15 +212,16 @@ public class GUI extends JFrame {
                 if (++currentImage >= recipes.size())
                     currentImage = 0;
 
-                imageComponent.setImage(recipes.get(currentImage).getImage());
-            }
 
-            if (direction == -1) {
+            } else if (direction == -1) {
                 if (--currentImage < 0)
                     currentImage = recipes.size() - 1;
-
-                imageComponent.setImage((recipes.get(currentImage).getImage()));
             }
+
+            if (!viewRecipe.getText().equals("View Recipe Image"))
+                imageComponent.setImage(recipes.get(currentImage).getImage());
+            else
+                imageComponent.setImage(recipes.get(currentImage).getTextImage());
 
             render();
         }
@@ -206,18 +234,16 @@ public class GUI extends JFrame {
 
         public void actionPerformed(ActionEvent event) {
             if (viewRecipe.getText().equals("View Recipe Image")) {
-                viewRecipe.setText("View Recipe");
-                imageComponent.setImage((recipes.get(currentImage).getImage()));
+                imageComponent.setImage(recipes.get(currentImage).getImage());
             } else {
                 try {
                     imageComponent.setImage(recipes.get(currentImage).getTextImage());
                 } catch (IllegalArgumentException e) {
                     JOptionPane.showMessageDialog(null, "Recipe File Not Found.");
                 }
-
-                viewRecipe.setText("View Recipe Image");
             }
 
+            updateViewImageButton();
             render();
         }
     }

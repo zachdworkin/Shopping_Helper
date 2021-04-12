@@ -1,10 +1,17 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class RecipePane extends JPanel {
+    private final Path RESOURCES_PATH = Path.of((new File(System.getProperty("user.dir"))).getAbsolutePath()).resolve("resources");
+
     private final Recipe recipe;
+    private boolean finalized;
 
     private final JButton addRecipe;
     private final JButton addIngredient;
@@ -22,6 +29,7 @@ public class RecipePane extends JPanel {
         addRecipe = new JButton("Add Recipe Name");
         addIngredient = new JButton("Add Ingredient");
         addInstruction = new JButton("Add Instruction");
+        JButton finish = new JButton("Finish");
         recipe = new Recipe("");
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -46,6 +54,11 @@ public class RecipePane extends JPanel {
         add(addInstruction, gbc);
         addInstruction.addActionListener(new InputInstruction(addInstruction));
         displayInstructions();
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        add(finish, gbc);
+        finish.addActionListener(new FinalizeRecipe(finish));
     }
 
     private void displayInstructions() {
@@ -95,8 +108,39 @@ public class RecipePane extends JPanel {
         return measureValue;
     }
 
+
+    public boolean isFinalized() {return finalized; }
+
+    public Recipe getRecipe() {return recipe; }
+
+    public void finalizeRecipe() {
+        if (recipe.getName().equals(""))
+            recipe.setName("DEFAULT_RECIPE_NAME");
+
+        try {
+            recipe.writeFile(RESOURCES_PATH.resolve("recipes").resolve(recipe.getName() + ".recipe").toFile());
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Could not generate recipe file");
+        }
+
+        finalized = true;
+    }
+
+    private class FinalizeRecipe extends AbstractAction {
+        final Component parent;
+        public FinalizeRecipe(Component parent) {
+            this.parent = parent;
+        }
+
+        public void actionPerformed(ActionEvent event) {
+            finalizeRecipe();
+            Window window = SwingUtilities.windowForComponent((JButton)event.getSource());
+            window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
+        }
+    }
+
     private class InputRecipeName extends AbstractAction {
-        Component parent;
+        final Component parent;
 
         public InputRecipeName(Component parent) {
             this.parent = parent;
@@ -114,7 +158,7 @@ public class RecipePane extends JPanel {
             JTextArea recipeName = new JTextArea();
             Object[] message = {
                     "Input Recipe Name",
-                    recipeName ,
+                    recipeName,
             };
 
             int result = JOptionPane.showConfirmDialog(parent, message,
@@ -129,7 +173,7 @@ public class RecipePane extends JPanel {
     }
 
     private class InputIngredient extends AbstractAction {
-        Component parent;
+        final Component parent;
         private final Object[] measureTypes = new Object[]{"Pound(s)", "Ounce(s)", "Teaspoon(s)", "Tablespoon(s)",
                 "Breast(s)", "Fillet(s)", "Chop(s)", "Bag(s)", "Cup(s)"};
 
@@ -201,7 +245,7 @@ public class RecipePane extends JPanel {
     }
 
     private class InputInstruction extends AbstractAction {
-        Component parent;
+        final Component parent;
 
         public InputInstruction(Component parent) {
             this.parent = parent;
