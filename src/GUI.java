@@ -12,19 +12,24 @@ import java.util.ArrayList;
 
 public class GUI extends JFrame {
 
+    private ArrayList<Recipe> recipes;
+
     private JPanel buttonPanel;
     private RecipePane recipePanel;
     private CheckoutPane checkoutPanel;
+
     private final JButton inputRecipe = new JButton("Input Recipe");
     private final JButton next = new JButton("Next");
     private final JButton previous = new JButton("Previous");
+    private final JButton viewRecipe = new JButton("View Recipe");
+    private AbstractAction nextFrameAction;
+    private AbstractAction previousFrameAction;
+
     private JLabel imageLabel;
     private int currentImage;
     private ImageComponent imageComponent;
     private GridBagConstraints gbc;
-    private ArrayList<Recipe> recipes;
-    private AbstractAction nextFrameAction;
-    private AbstractAction previousFrameAction;
+
 
     private enum panelType {
         viewing,
@@ -99,6 +104,8 @@ public class GUI extends JFrame {
         gbc.gridy = 0;
         buttonPanel.add(inputRecipe, gbc);
         gbc.gridy++;
+        buttonPanel.add(viewRecipe, gbc);
+        gbc.gridy++;
         buttonPanel.add(next);
         gbc.gridy++;
         buttonPanel.add(previous);
@@ -123,6 +130,7 @@ public class GUI extends JFrame {
         inputRecipe.addActionListener(new InputRecipeAction());
         next.addActionListener(nextFrameAction);
         previous.addActionListener(previousFrameAction);
+        viewRecipe.addActionListener(new ViewRecipeAction());
     }
 
     private void initializeRecipes() {
@@ -138,20 +146,24 @@ public class GUI extends JFrame {
         for (File currentFile : recipeFiles) {
             try {
                 recipes.add(Recipe.readFile(currentFile));
+                imageComponent.createImageFromText(currentFile.toPath());
             } catch (IOException ioe) {
                 JOptionPane.showMessageDialog(null, "Recipe " + currentFile.toString() +
                                               "not found.");
             }
 
             for(Recipe recipe : recipes) {
+                String name = recipe.getName() + ".png";
                 try {
-                    recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(recipe.getName() +
-                            ".png").toFile()));
+                    recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(name).toFile()));
+                    recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(name).toFile()));
                 } catch (IOException ioe) {
                     JOptionPane.showMessageDialog(null, "Recipe Image Not Found.");
                 }
             }
         }
+
+
     }
 
     private void swapPanels(panelType panel) {
@@ -201,6 +213,29 @@ public class GUI extends JFrame {
                     currentImage = recipes.size() - 1;
 
                 imageComponent.setImage((recipes.get(currentImage).getImage()));
+            }
+
+            render();
+        }
+    }
+
+    private class ViewRecipeAction extends AbstractAction {
+        public ViewRecipeAction() {
+
+        }
+
+        public void actionPerformed(ActionEvent event) {
+            if (viewRecipe.getText().equals("View Recipe Image")) {
+                viewRecipe.setText("View Recipe");
+                imageComponent.setImage((recipes.get(currentImage).getImage()));
+            } else {
+                try {
+                    imageComponent.setImage(recipes.get(currentImage).getTextImage());
+                } catch (IllegalArgumentException e) {
+                    JOptionPane.showMessageDialog(null, "Recipe File Not Found.");
+                }
+
+                viewRecipe.setText("View Recipe Image");
             }
 
             render();

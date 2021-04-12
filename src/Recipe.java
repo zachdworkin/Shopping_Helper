@@ -10,20 +10,18 @@ public class Recipe {
     private final ArrayList<Ingredient> ingredients;
     private final ArrayList<String> instructions;
     private Image image;
+    private Image textImage;
 
     public Recipe(String name) {
         this.name = name;
         ingredients = new ArrayList<>();
         this.instructions = new ArrayList<>();
         this.image = null;
+        this.textImage = null;
     }
 
     public ArrayList<String> getInstructions() {
         return instructions;
-    }
-
-    public void addIngredient(Ingredient ingredient) {
-        ingredients.add(ingredient);
     }
 
     public void addInstruction(String instruction) {
@@ -32,28 +30,34 @@ public class Recipe {
 
     public ArrayList<Ingredient> getIngredients() { return ingredients; }
 
+    public void addIngredient(Ingredient ingredient) {
+        ingredients.add(ingredient);
+    }
+
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String name) {this.name = name;}
+
+    public Image getTextImage() {return textImage;}
+
+    public void setTextImage(Image textImage) {this.textImage = textImage; }
+
+    public Image getImage() {
+        return this.image;
     }
 
     public void setImage(Image image) {
         this.image = image;
     }
 
-    public Image getImage() {
-        return this.image;
-    }
-
     public static Recipe readFile(File recipeFile) throws IOException {
         Scanner scanner = new Scanner(recipeFile);
         Recipe recipe = new Recipe(scanner.nextLine());
-        scanner.nextLine();
+        scanner.nextLine(); scanner.nextLine();
         String currentLine = scanner.nextLine();
-        while (!currentLine.equals("instructions")) {
+        while (!currentLine.equals("")) {
             String[] ingredientComponents = currentLine.split(" ");
             recipe.addIngredient(new Ingredient(ingredientComponents[1].replace(":", ""),
                     Double.parseDouble(ingredientComponents[0]),
@@ -61,6 +65,7 @@ public class Recipe {
             currentLine = scanner.nextLine();
         }
 
+        scanner.nextLine();
         while (scanner.hasNext()) {
             recipe.addInstruction(scanner.nextLine());
         }
@@ -73,12 +78,12 @@ public class Recipe {
         if (recipeFile.createNewFile()) {
             FileWriter writer = new FileWriter(recipeFile);
             writer.write(name + "\n");
-            writer.write("ingredients\n");
+            writer.write("\ningredients\n");
             for (Ingredient ingredient : ingredients) {
                 writer.write(ingredient.toString() + "\n");
             }
 
-            writer.write("instructions\n");
+            writer.write("\ninstructions\n");
             for (String instruction : instructions) {
                 writer.write(instruction + "\n");
             }

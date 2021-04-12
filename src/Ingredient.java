@@ -3,7 +3,6 @@ public class Ingredient {
     private final double measurementAmount;
     private final String name;
 
-
     public Ingredient(String measurementType, double measurementAmount, String name) {
         this.measurementType = measurementType;
         this.measurementAmount = measurementAmount;
