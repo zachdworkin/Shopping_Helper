@@ -11,16 +11,20 @@ class ImageComponent extends JComponent {
 
     public ImageComponent() throws IOException {
         resourcesDirectory = Path.of((new File(System.getProperty("user.dir"))).getAbsolutePath()).resolve("resources");
-        this.image = setImageFile("cook_book.png");
+        this.image = getImageFromFile("cook_book.png");
     }
 
     public Image getImage() { return this.image;}
 
-    public void setImage(String image) throws IOException {
-        this.image = setImageFile(image);
+    public void setImage(Image image) {
+        this.image = image;
     }
 
-    public Image setImageFile(String image) throws IOException {
+    public Path getResourcesDirectory() {
+        return resourcesDirectory;
+    }
+
+    public Image getImageFromFile(String image) throws IOException {
         return ImageIO.read(resourcesDirectory.resolve(image).toFile());
     }
 

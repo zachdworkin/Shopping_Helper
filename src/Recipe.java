@@ -1,14 +1,21 @@
+import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Recipe {
     private String name;
     private final ArrayList<Ingredient> ingredients;
     private final ArrayList<String> instructions;
+    private Image image;
 
     public Recipe(String name) {
         this.name = name;
         ingredients = new ArrayList<>();
         this.instructions = new ArrayList<>();
+        this.image = null;
     }
 
     public ArrayList<String> getInstructions() {
@@ -23,11 +30,62 @@ public class Recipe {
         instructions.add(instruction);
     }
 
+    public ArrayList<Ingredient> getIngredients() { return ingredients; }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setImage(Image image) {
+        this.image = image;
+    }
+
+    public Image getImage() {
+        return this.image;
+    }
+
+    public static Recipe readFile(File recipeFile) throws IOException {
+        Scanner scanner = new Scanner(recipeFile);
+        Recipe recipe = new Recipe(scanner.nextLine());
+        scanner.nextLine();
+        String currentLine = scanner.nextLine();
+        while (!currentLine.equals("instructions")) {
+            String[] ingredientComponents = currentLine.split(" ");
+            recipe.addIngredient(new Ingredient(ingredientComponents[1].replace(":", ""),
+                    Double.parseDouble(ingredientComponents[0]),
+                    ingredientComponents[2]));
+            currentLine = scanner.nextLine();
+        }
+
+        while (scanner.hasNext()) {
+            recipe.addInstruction(scanner.nextLine());
+        }
+
+        scanner.close();
+        return recipe;
+    }
+
+    public void writeFile(File recipeFile) throws IOException {
+        if (recipeFile.createNewFile()) {
+            FileWriter writer = new FileWriter(recipeFile);
+            writer.write(name + "\n");
+            writer.write("ingredients\n");
+            for (Ingredient ingredient : ingredients) {
+                writer.write(ingredient.toString() + "\n");
+            }
+
+            writer.write("instructions\n");
+            for (String instruction : instructions) {
+                writer.write(instruction + "\n");
+            }
+
+            writer.close();
+        } else {
+            throw new IOException(); //file already exists
+        }
     }
 }

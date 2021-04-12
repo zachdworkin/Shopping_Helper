@@ -1,24 +1,38 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 import java.io.IOException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
+import java.nio.file.Path;
+import java.util.ArrayList;
 
 public class GUI extends JFrame {
 
-    private boolean currentPanel;
     private JPanel buttonPanel;
     private RecipePane recipePanel;
+    private CheckoutPane checkoutPanel;
     private final JButton inputRecipe = new JButton("Input Recipe");
-    private JLabel displayedImage;
+    private final JButton next = new JButton("Next");
+    private final JButton previous = new JButton("Previous");
+    private JLabel imageLabel;
+    private int currentImage;
     private ImageComponent imageComponent;
+    private GridBagConstraints gbc;
+    private ArrayList<Recipe> recipes;
+    private AbstractAction nextFrameAction;
+    private AbstractAction previousFrameAction;
+
+    private enum panelType {
+        viewing,
+        inputting,
+        checkout,
+    }
 
     public GUI () {
-        currentPanel = true;
         initAll();
         render();
     }
@@ -29,7 +43,6 @@ public class GUI extends JFrame {
             GUI gui = new GUI();
             gui.setTitle("Shopping List Helper");
             WindowListener exitListener = new WindowAdapter() {
-
                 @Override
                 public void windowClosing(WindowEvent e) {
                     System.exit(0);
@@ -46,32 +59,20 @@ public class GUI extends JFrame {
         initializePanels();
         initializeKeystrokeActions();
         addActionListeners();
+        initializeRecipes();
     }
 
     private void initializeLayout() {
-        GridBagLayout layout = new GridBagLayout();
-        setLayout(layout);
-        SimpleAttributeSet as = new SimpleAttributeSet();
-        StyleConstants.setAlignment(as, StyleConstants.ALIGN_LEFT);
-    }
-
-    private void initializePanels() {
-        initializeButtonPanel();
-        recipePanel = new RecipePane();
-    }
-
-    private void initializeButtonPanel() {
-        buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        buttonPanel.add(inputRecipe);
-        this.getContentPane().add(buttonPanel);
-    }
-
-    private void addActionListeners() {
-        inputRecipe.addActionListener(new InputRecipeAction());
+        setLayout(new GridBagLayout());
+        this.gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
     }
 
     private void initImageComponent() {
+        currentImage = 0;
         try {
             imageComponent = new ImageComponent();
         } catch (IOException ioe) {
@@ -79,39 +80,103 @@ public class GUI extends JFrame {
         }
 
         imageComponent.setBorder(BorderFactory.createEtchedBorder());
-        displayedImage = new JLabel();
-        this.getContentPane().add(displayedImage);
+        imageLabel = new JLabel();
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        this.getContentPane().add(imageLabel, gbc);
+    }
+
+    private void initializePanels() {
+        initializeButtonPanel();
+        recipePanel = new RecipePane();
+        checkoutPanel = new CheckoutPane();
+    }
+
+    private void initializeButtonPanel() {
+        buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        buttonPanel.add(inputRecipe, gbc);
+        gbc.gridy++;
+        buttonPanel.add(next);
+        gbc.gridy++;
+        buttonPanel.add(previous);
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        this.getContentPane().add(buttonPanel, gbc);
     }
 
     private void initializeKeystrokeActions() {
-        InputMap imap = displayedImage.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        InputMap imap = buttonPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         imap.put(KeyStroke.getKeyStroke("RIGHT"), "panel.next");
         imap.put(KeyStroke.getKeyStroke("LEFT"), "panel.prev");
-        AbstractAction nextFrameAction = new StepAction(1);
-        AbstractAction previousFrameAction = new StepAction(-1);
+        nextFrameAction = new StepAction(1);
+        previousFrameAction = new StepAction(-1);
 
-        ActionMap actionMap = displayedImage.getActionMap();
+        ActionMap actionMap = buttonPanel.getActionMap();
         actionMap.put("panel.next", nextFrameAction);
         actionMap.put("panel.prev", previousFrameAction);
     }
 
-    private void swapPanels() {
+    private void addActionListeners() {
+        inputRecipe.addActionListener(new InputRecipeAction());
+        next.addActionListener(nextFrameAction);
+        previous.addActionListener(previousFrameAction);
+    }
+
+    private void initializeRecipes() {
+        Path recipeResourcesDirectory = imageComponent.getResourcesDirectory().resolve("recipes");
+        recipes = new ArrayList<>();
+
+        File[] recipeFiles = recipeResourcesDirectory.toFile().listFiles();
+        if (recipeFiles == null) {
+            JOptionPane.showMessageDialog(null, "No Recipes found");
+            System.exit(1);
+        }
+
+        for (File currentFile : recipeFiles) {
+            try {
+                recipes.add(Recipe.readFile(currentFile));
+            } catch (IOException ioe) {
+                JOptionPane.showMessageDialog(null, "Recipe " + currentFile.toString() +
+                                              "not found.");
+            }
+
+            for(Recipe recipe : recipes) {
+                try {
+                    recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(recipe.getName() +
+                            ".png").toFile()));
+                } catch (IOException ioe) {
+                    JOptionPane.showMessageDialog(null, "Recipe Image Not Found.");
+                }
+            }
+        }
+    }
+
+    private void swapPanels(panelType panel) {
         Container container = this.getContentPane();
-        if (!currentPanel) {
-            container.remove(buttonPanel);
-            container.add(recipePanel);
-        } else {
-            container.remove(recipePanel);
-            container.add(buttonPanel);
+        container.removeAll();
+        switch (panel) {
+            case viewing -> {
+                container.add(imageLabel);
+                container.add(buttonPanel);
+            }
+            case inputting -> {
+                container.add(imageLabel);
+                container.add(recipePanel);
+            }
+            case checkout -> container.add(checkoutPanel);
+            default -> container.add(imageLabel);
         }
 
         render();
-        currentPanel = !currentPanel;
     }
 
     private void render() {
-        displayedImage.setIcon(new ImageIcon(imageComponent.getImage()));
-        pack();
+        imageLabel.setIcon(new ImageIcon(imageComponent.getImage()));
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        this.setVisible(true);
         revalidate();
         repaint();
     }
@@ -125,11 +190,17 @@ public class GUI extends JFrame {
 
         public void actionPerformed(ActionEvent event) {
             if (direction == 1) {
-                try {
-                    imageComponent.setImage("cook_book1.png");
-                } catch (IOException | IllegalArgumentException e) {
-                    JOptionPane.showMessageDialog(null, "Image not found");
-                }
+                if (++currentImage >= recipes.size())
+                    currentImage = 0;
+
+                imageComponent.setImage(recipes.get(currentImage).getImage());
+            }
+
+            if (direction == -1) {
+                if (--currentImage < 0)
+                    currentImage = recipes.size() - 1;
+
+                imageComponent.setImage((recipes.get(currentImage).getImage()));
             }
 
             render();
@@ -140,8 +211,6 @@ public class GUI extends JFrame {
         public InputRecipeAction() {
         }
 
-        public void actionPerformed(ActionEvent event) {
-            swapPanels();
-        }
+        public void actionPerformed(ActionEvent event) {swapPanels(panelType.inputting);}
     }
 }
