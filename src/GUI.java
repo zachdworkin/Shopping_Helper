@@ -1,14 +1,14 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.Thread.sleep;
 
 public class GUI extends JFrame {
 
@@ -95,6 +95,10 @@ public class GUI extends JFrame {
         initializeButtonPanel();
         recipePanel = new RecipePane();
         checkoutPanel = new CheckoutPane();
+        this.getContentPane().add(recipePanel);
+        recipePanel.setVisible(false);
+        this.getContentPane().add(checkoutPanel);
+        checkoutPanel.setVisible(false);
     }
 
     private void initializeButtonPanel() {
@@ -167,19 +171,21 @@ public class GUI extends JFrame {
     }
 
     private void swapPanels(panelType panel) {
-        Container container = this.getContentPane();
-        container.removeAll();
         switch (panel) {
             case viewing -> {
-                container.add(imageLabel);
-                container.add(buttonPanel);
+                recipePanel.setVisible(false);
+                buttonPanel.setVisible(true);
             }
             case inputting -> {
-                container.add(imageLabel);
-                container.add(recipePanel);
+                buttonPanel.setVisible(false);
+                recipePanel.setVisible(true);
             }
-            case checkout -> container.add(checkoutPanel);
-            default -> container.add(imageLabel);
+            case checkout -> {
+                buttonPanel.setVisible(false);
+                recipePanel.setVisible(false);
+                checkoutPanel.setVisible(false);
+            }
+            default -> imageLabel.setVisible(true);
         }
 
         render();
@@ -246,6 +252,8 @@ public class GUI extends JFrame {
         public InputRecipeAction() {
         }
 
-        public void actionPerformed(ActionEvent event) {swapPanels(panelType.inputting);}
+        public void actionPerformed(ActionEvent event) {
+            swapPanels(panelType.inputting);
+        }
     }
 }
