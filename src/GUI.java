@@ -6,22 +6,20 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.Thread.sleep;
 
 public class GUI extends JFrame {
 
     private ArrayList<Recipe> recipes;
 
     private JPanel buttonPanel;
-    private RecipePane recipePanel;
-    private CheckoutPane checkoutPanel;
 
     private final JButton inputRecipe = new JButton("Input Recipe");
     private final JButton next = new JButton("Next");
     private final JButton previous = new JButton("Previous");
     private final JButton viewRecipe = new JButton("View Recipe");
+
+    private JDialog dialog;
+
     private AbstractAction nextFrameAction;
     private AbstractAction previousFrameAction;
 
@@ -29,13 +27,6 @@ public class GUI extends JFrame {
     private int currentImage;
     private ImageComponent imageComponent;
     private GridBagConstraints gbc;
-
-
-    private enum panelType {
-        viewing,
-        inputting,
-        checkout,
-    }
 
     public GUI () {
         initAll();
@@ -61,7 +52,8 @@ public class GUI extends JFrame {
     private void initAll() {
         initializeLayout();
         initImageComponent();
-        initializePanels();
+        initializeButtonPanel();
+        initializeDialog();
         initializeKeystrokeActions();
         addActionListeners();
         initializeRecipes();
@@ -91,16 +83,6 @@ public class GUI extends JFrame {
         this.getContentPane().add(imageLabel, gbc);
     }
 
-    private void initializePanels() {
-        initializeButtonPanel();
-        recipePanel = new RecipePane();
-        checkoutPanel = new CheckoutPane();
-        this.getContentPane().add(recipePanel);
-        recipePanel.setVisible(false);
-        this.getContentPane().add(checkoutPanel);
-        checkoutPanel.setVisible(false);
-    }
-
     private void initializeButtonPanel() {
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
@@ -116,6 +98,19 @@ public class GUI extends JFrame {
         gbc.gridx = 1;
         gbc.gridy = 0;
         this.getContentPane().add(buttonPanel, gbc);
+    }
+
+    private void initializeDialog() {
+        dialog = new JDialog(this);
+        dialog.setSize(1000, 1000);
+
+        RecipePane recipePanel = new RecipePane();
+        dialog.add(recipePanel);
+        dialog.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e){
+                //recipePanel.finalizeRecipe();
+            }
+        });
     }
 
     private void initializeKeystrokeActions() {
@@ -168,27 +163,6 @@ public class GUI extends JFrame {
         }
 
 
-    }
-
-    private void swapPanels(panelType panel) {
-        switch (panel) {
-            case viewing -> {
-                recipePanel.setVisible(false);
-                buttonPanel.setVisible(true);
-            }
-            case inputting -> {
-                buttonPanel.setVisible(false);
-                recipePanel.setVisible(true);
-            }
-            case checkout -> {
-                buttonPanel.setVisible(false);
-                recipePanel.setVisible(false);
-                checkoutPanel.setVisible(false);
-            }
-            default -> imageLabel.setVisible(true);
-        }
-
-        render();
     }
 
     private void render() {
@@ -253,7 +227,7 @@ public class GUI extends JFrame {
         }
 
         public void actionPerformed(ActionEvent event) {
-            swapPanels(panelType.inputting);
+            dialog.setVisible(true);
         }
     }
 }

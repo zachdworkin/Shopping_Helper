@@ -22,7 +22,6 @@ public class RecipePane extends JPanel {
         addRecipe = new JButton("Add Recipe Name");
         addIngredient = new JButton("Add Ingredient");
         addInstruction = new JButton("Add Instruction");
-        JButton done = new JButton("Done");
         recipe = new Recipe("");
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -47,11 +46,6 @@ public class RecipePane extends JPanel {
         add(addInstruction, gbc);
         addInstruction.addActionListener(new InputInstruction(addInstruction));
         displayInstructions();
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        add(done, gbc);
-        done.addActionListener(new DoneAction(this));
     }
 
     private void displayInstructions() {
@@ -256,17 +250,6 @@ public class RecipePane extends JPanel {
 
             instructionLabels.add(new JLabel(words));
             recipe.addInstruction(words);
-        }
-    }
-
-    private static class DoneAction extends AbstractAction {
-        Component parent;
-
-        public DoneAction(Component parent) {
-            this.parent = parent;
-        }
-
-        public void actionPerformed(ActionEvent event) {
         }
     }
 }
