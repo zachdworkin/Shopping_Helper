@@ -1,14 +1,27 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.List;
+
+import static javax.swing.JOptionPane.*;
 
 public class RecipePane extends JPanel {
     private final Path RESOURCES_PATH = Path.of((new File(System.getProperty("user.dir"))).getAbsolutePath()).resolve("resources");
+
+    private Path userFile;
 
     private final Recipe recipe;
     private boolean finalized;
@@ -18,6 +31,7 @@ public class RecipePane extends JPanel {
     private final JButton addInstruction;
 
     private final JLabel displayRecipeName;
+    private JLabel image;
 
     ArrayList<JLabel> ingredientLabels;
     ArrayList<JLabel> instructionLabels;
@@ -29,6 +43,7 @@ public class RecipePane extends JPanel {
         addRecipe = new JButton("Add Recipe Name");
         addIngredient = new JButton("Add Ingredient");
         addInstruction = new JButton("Add Instruction");
+        JButton addImage = new JButton("Add Image");
         JButton finish = new JButton("Finish");
         recipe = new Recipe("");
         setLayout(new GridBagLayout());
@@ -55,10 +70,19 @@ public class RecipePane extends JPanel {
         addInstruction.addActionListener(new InputInstruction(addInstruction));
         displayInstructions();
 
+        gbc.gridx++;
+        add(addImage, gbc);
+        addImage.addActionListener(new OpenFile(null));
+
         gbc.gridx = 1;
         gbc.gridy = 3;
         add(finish, gbc);
         finish.addActionListener(new FinalizeRecipe(finish));
+
+        addDropTarget(this);
+        image = new JLabel();
+        add(image);
+        image.setVisible(false);
     }
 
     private void displayInstructions() {
@@ -89,7 +113,7 @@ public class RecipePane extends JPanel {
         try {
             ingredientName = name.getText();
         } catch (NullPointerException npe) {
-            JOptionPane.showMessageDialog(parent, "Invalid Input.");
+            showMessageDialog(parent, "Invalid Input.");
         }
 
         return ingredientName;
@@ -103,27 +127,59 @@ public class RecipePane extends JPanel {
                 throw new NumberFormatException();
 
         } catch (NumberFormatException nfe) {
-            JOptionPane.showMessageDialog(parent, "Invalid Input.");
+            showMessageDialog(parent, "Invalid Input.");
         }
         return measureValue;
     }
 
+    private void addDropTarget(Component parent) {
+        setDropTarget(new DropTarget() {
+            public synchronized void drop(DropTargetDropEvent event) {
+                try {
+                    event.acceptDrop(DnDConstants.ACTION_COPY);
+                    List<File> droppedFiles = (List<File>) event.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                    createUserFile(droppedFiles.get(0).toPath(), getRecipeName());
+                } catch (Exception ex) {
+                    showMessageDialog(parent, "File Lost");
+                    return;
+                }
+
+                image.setIcon(new ImageIcon(recipe.getImage()));
+                image.setVisible(true);
+            }
+        });
+    }
 
     public boolean isFinalized() {return finalized; }
 
     public Recipe getRecipe() {return recipe; }
 
     public void finalizeRecipe() {
-        if (recipe.getName().equals(""))
-            recipe.setName("DEFAULT_RECIPE_NAME");
+        recipe.setName(getRecipeName());
+        if (!RESOURCES_PATH.resolve("recipes").resolve(recipe.getName() + ".recipe").toFile().isFile())
+            createRecipeFile();
 
-        try {
-            recipe.writeFile(RESOURCES_PATH.resolve("recipes").resolve(recipe.getName() + ".recipe").toFile());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Could not generate recipe file");
-        }
+        if (recipe.getImage() == null)
+            saveUserPNGFile();
 
         finalized = true;
+    }
+
+    private void saveUserPNGFile() {
+        try {
+            Files.copy(RESOURCES_PATH.resolve("DefaultImageFile").resolve("default.png"), RESOURCES_PATH.resolve(recipe.getName() + ".png"), StandardCopyOption.REPLACE_EXISTING);
+            recipe.setImage(ImageIO.read(RESOURCES_PATH.resolve(recipe.getName() + ".png").toFile()));
+        } catch (IOException e) {
+            showMessageDialog(null, "Could not generate a default recipe file");
+        }
+    }
+
+    private void createRecipeFile() {
+        try {
+            recipe.writeFile(RESOURCES_PATH.resolve("recipes").resolve(recipe.getName() + ".recipe").toFile());
+        } catch (IOException ioe) {
+            showMessageDialog(null, "File already Exists");
+        }
     }
 
     private class FinalizeRecipe extends AbstractAction {
@@ -137,6 +193,46 @@ public class RecipePane extends JPanel {
             Window window = SwingUtilities.windowForComponent((JButton)event.getSource());
             window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
         }
+    }
+
+    private class OpenFile implements ActionListener {
+        private final Dialog parent;
+
+        public OpenFile(Dialog parent) {this.parent = parent; }
+
+        public void actionPerformed(ActionEvent e) throws NumberFormatException {
+            FileDialog fd = new FileDialog(parent, "Choose a File", FileDialog.LOAD);
+            fd.setVisible(true);
+            File[] files = fd.getFiles();
+
+            //if user hits Cancel
+            if (files.length == 0) {
+                return;
+            }
+
+            try {
+                createUserFile(files[0].toPath(), getRecipeName());
+            } catch (IOException ioException) {
+                showMessageDialog(parent, "File Lost");
+            }
+
+            image.setIcon(new ImageIcon(recipe.getImage()));
+            image.setVisible(true);
+        }
+    }
+
+    private void createUserFile(Path filePath, String name) throws IOException{
+        Files.copy(filePath, RESOURCES_PATH.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+        userFile = RESOURCES_PATH.resolve(name);
+        recipe.setImage(ImageIO.read(userFile.toFile()));
+    }
+
+    private String getRecipeName() {
+        String name = recipe.getName();
+        if (!name.equals(""))
+            return name;
+        else
+            return "DEFAULT_NAME";
     }
 
     private class InputRecipeName extends AbstractAction {
@@ -161,10 +257,10 @@ public class RecipePane extends JPanel {
                     recipeName,
             };
 
-            int result = JOptionPane.showConfirmDialog(parent, message,
-                    "Input Recipe", JOptionPane.OK_CANCEL_OPTION);
+            int result = showConfirmDialog(parent, message,
+                    "Input Recipe", OK_CANCEL_OPTION);
 
-            if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+            if (result == CANCEL_OPTION || result == CLOSED_OPTION) {
                 return null;
             }
 
@@ -195,15 +291,15 @@ public class RecipePane extends JPanel {
 
         private void getIngredients() {
             int result = getRecipeIngredientsFromUser();
-            if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION)
+            if (result == CANCEL_OPTION || result == CLOSED_OPTION)
                 return;
 
-            result = JOptionPane.showConfirmDialog(addIngredient, "Do you want to add another ingredient?",
-                    "Add ingredient", JOptionPane.YES_NO_OPTION);
-            while (result == JOptionPane.YES_OPTION) {
+            result = showConfirmDialog(addIngredient, "Do you want to add another ingredient?",
+                    "Add ingredient", YES_NO_OPTION);
+            while (result == YES_OPTION) {
                 getRecipeIngredientsFromUser();
-                result = JOptionPane.showConfirmDialog(addIngredient, "Do you want to add another ingredient?",
-                        "Add ingredient", JOptionPane.YES_NO_OPTION);
+                result = showConfirmDialog(addIngredient, "Do you want to add another ingredient?",
+                        "Add ingredient", YES_NO_OPTION);
             }
         }
 
@@ -219,28 +315,28 @@ public class RecipePane extends JPanel {
                     measurementType,
             };
 
-            int result = JOptionPane.showConfirmDialog(parent, message,
+            int result = showConfirmDialog(parent, message,
                     (recipe.getName() == null ? "" : (recipe.getName() + ": ")) + "Input Ingredient",
-                    JOptionPane.OK_CANCEL_OPTION);
+                    OK_CANCEL_OPTION);
 
-            if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
-                return JOptionPane.CANCEL_OPTION;
+            if (result == CANCEL_OPTION || result == CLOSED_OPTION) {
+                return CANCEL_OPTION;
             }
 
             String ingredientName = checkStringInput(parent, name);
             if (ingredientName.equals(""))
-                return JOptionPane.CANCEL_OPTION;
+                return CANCEL_OPTION;
 
             double measureValue = checkNumberInput(parent, number);
             if (measureValue < 0)
-                return JOptionPane.CANCEL_OPTION;
+                return CANCEL_OPTION;
 
             Ingredient newIngredient = new Ingredient(measureTypes[measurementType.getSelectedIndex()].toString(),
                     measureValue, ingredientName);
             recipe.addIngredient(newIngredient);
             ingredientLabels.add(new JLabel("\t" + newIngredient.toString()));
 
-            return JOptionPane.OK_OPTION;
+            return OK_OPTION;
         }
     }
 
@@ -265,8 +361,8 @@ public class RecipePane extends JPanel {
 
         private void getInstructions() {
             getInstructionFromUser();
-            while (JOptionPane.showConfirmDialog(null, "Is there another step?",
-                    "Add Recipe Instruction", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            while (showConfirmDialog(null, "Is there another step?",
+                    "Add Recipe Instruction", YES_NO_OPTION) == YES_OPTION) {
                 getInstructionFromUser();
             }
         }
@@ -278,10 +374,10 @@ public class RecipePane extends JPanel {
                     instruction,
             };
 
-            int result = JOptionPane.showConfirmDialog(null, message,
-                    recipe.getName() + ": Input Instruction", JOptionPane.OK_CANCEL_OPTION);
+            int result = showConfirmDialog(null, message,
+                    recipe.getName() + ": Input Instruction", OK_CANCEL_OPTION);
 
-            if (result == JOptionPane.CANCEL_OPTION || result == JOptionPane.CLOSED_OPTION) {
+            if (result == CANCEL_OPTION || result == CLOSED_OPTION) {
                 return;
             }
 
@@ -289,7 +385,7 @@ public class RecipePane extends JPanel {
             try {
                 words = instruction.getText();
             } catch (NullPointerException npe) {
-                JOptionPane.showMessageDialog(null, "No instruction was input.");
+                showMessageDialog(null, "No instruction was input.");
             }
 
             instructionLabels.add(new JLabel(words));

@@ -103,19 +103,26 @@ public class GUI extends JFrame {
 
     private void initializeDialog() {
         dialog = new JDialog(this);
-        dialog.setSize(1000, 1000);
+        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        dialog.setSize(size.width, size.height);
 
         recipePanel = new RecipePane();
         dialog.add(recipePanel);
         dialog.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e){
                 if (recipePanel.isFinalized()) {
-                    System.out.println("finalized");
                     Recipe recipe = recipePanel.getRecipe();
+                    Path directory = imageComponent.getResourcesDirectory();
                     try {
-                        imageComponent.createImageFromText(imageComponent.getResourcesDirectory().resolve("recipes").resolve(recipe.getName() + ".recipe"));
+                        imageComponent.createImageFromText(directory.resolve("recipes").resolve(recipe.getName() + ".recipe"));
                     } catch (IOException ioException) {
-                        JOptionPane.showMessageDialog(null, "Could not generate png from text");
+                        JOptionPane.showMessageDialog(null, "Could not generate .png from .recipe");
+                    }
+
+                    try {
+                        recipe.setTextImage(ImageIO.read(directory.resolve("recipeCardImages").resolve(recipe.getName() + ".png").toFile()));
+                    } catch (IOException ioe) {
+                        JOptionPane.showMessageDialog(null, "Error generating recipe png card");
                     }
 
                     recipes.add(recipe);
@@ -160,8 +167,7 @@ public class GUI extends JFrame {
                 recipes.add(Recipe.readFile(currentFile));
                 imageComponent.createImageFromText(currentFile.toPath());
             } catch (IOException ioe) {
-                JOptionPane.showMessageDialog(null, "Recipe " + currentFile.toString() +
-                                              "not found.");
+                JOptionPane.showMessageDialog(null, "Recipe " + currentFile.toString() + "not found.");
             }
 
             for(Recipe recipe : recipes) {
@@ -170,6 +176,7 @@ public class GUI extends JFrame {
                     recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(name).toFile()));
                     recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(name).toFile()));
                 } catch (IOException ioe) {
+                    //TODO fix
                     JOptionPane.showMessageDialog(null, "Recipe Image Not Found.");
                 }
             }
@@ -179,11 +186,14 @@ public class GUI extends JFrame {
     private void render() {
         if (imageComponent.getImage() == null) {
             JOptionPane.showMessageDialog(null, "Recipe Image Not Found. Using default image");
-            try {
-                imageComponent.setImage(imageComponent.getImageFromFile("cook_book.png"));
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Recipe Image Not Found.");
-            }
+            if (!viewRecipe.getText().equals("View Recipe Image"))
+                try {
+                    imageComponent.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("DefaultImageFile").resolve("default.png").toFile()));
+                } catch (IOException ioe) {
+                    JOptionPane.showMessageDialog(null, "Default Image not found");
+                }
+            else
+                imageComponent.setImage(recipes.get(0).getTextImage());
         }
 
         imageLabel.setIcon(new ImageIcon(imageComponent.getImage()));
@@ -233,11 +243,12 @@ public class GUI extends JFrame {
         }
 
         public void actionPerformed(ActionEvent event) {
+            Recipe currentRecipe = recipes.get(currentImage);
             if (viewRecipe.getText().equals("View Recipe Image")) {
-                imageComponent.setImage(recipes.get(currentImage).getImage());
+                imageComponent.setImage(currentRecipe.getImage());
             } else {
                 try {
-                    imageComponent.setImage(recipes.get(currentImage).getTextImage());
+                    imageComponent.setImage(currentRecipe.getTextImage());
                 } catch (IllegalArgumentException e) {
                     JOptionPane.showMessageDialog(null, "Recipe File Not Found.");
                 }

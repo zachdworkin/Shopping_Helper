@@ -11,6 +11,6 @@ public class IngredientTest {
 
     @Test
     public void toStringProducesProperString() {
-        assertEquals(ingredient.toString(), "1 Ounce(s): Sugar");
+        assertEquals(ingredient.toString(), "1.0 Ounce(s): Sugar");
     }
 }

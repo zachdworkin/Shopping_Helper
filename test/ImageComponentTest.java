@@ -31,13 +31,13 @@ public class ImageComponentTest {
     }
 
     @AfterEach
-//    public void cleanup() {
-//        if(!RESOURCES_PATH.resolve("recipes").resolve("test.recipe").toAbsolutePath().toFile().delete())
-//            System.out.println("Recipe File could not be deleted");
-//
-//        if (!RESOURCES_PATH.resolve("recipeCardImages").resolve("test.png").toAbsolutePath().toFile().delete())
-//            System.out.println("PNG File could not be deleted");
-//    }
+    public void cleanup() {
+        if(!RESOURCES_PATH.resolve("recipes").resolve("test.recipe").toAbsolutePath().toFile().delete())
+            System.out.println("Recipe File could not be deleted");
+
+        if (!RESOURCES_PATH.resolve("recipeCardImages").resolve("test.png").toAbsolutePath().toFile().delete())
+            System.out.println("PNG File could not be deleted");
+    }
 
     @Test
     void createImageFromTextCreatedImage() {
