@@ -67,4 +67,9 @@ public class RecipeTest {
             fail();
         }
     }
+
+    @Test
+    void myFirstCommitTest() {
+        assertTrue(true);
+    }
 }
