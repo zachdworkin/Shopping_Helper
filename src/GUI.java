@@ -179,7 +179,7 @@ public class GUI extends JFrame {
                 }
 
                 try {
-                    recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(name).toFile()));
+                    recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(name + ".png").toFile()));
                 } catch (IOException ioe) {
                     JOptionPane.showMessageDialog(null, "Recipe Image Card Not Found.");
                 }
