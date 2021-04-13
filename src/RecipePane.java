@@ -166,9 +166,10 @@ public class RecipePane extends JPanel {
     }
 
     private void saveUserPNGFile() {
+        String name = recipe.getName() + ".png";
         try {
-            Files.copy(RESOURCES_PATH.resolve("DefaultImageFile").resolve("default.png"), RESOURCES_PATH.resolve(recipe.getName() + ".png"), StandardCopyOption.REPLACE_EXISTING);
-            recipe.setImage(ImageIO.read(RESOURCES_PATH.resolve(recipe.getName() + ".png").toFile()));
+            Files.copy(RESOURCES_PATH.resolve("DefaultImageFile").resolve("default.png"), RESOURCES_PATH.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+            recipe.setImage(ImageIO.read(RESOURCES_PATH.resolve(name).toFile()));
         } catch (IOException e) {
             showMessageDialog(null, "Could not generate a default recipe file");
         }
@@ -214,6 +215,7 @@ public class RecipePane extends JPanel {
                 createUserFile(files[0].toPath(), getRecipeName());
             } catch (IOException ioException) {
                 showMessageDialog(parent, "File Lost");
+                return;
             }
 
             image.setIcon(new ImageIcon(recipe.getImage()));
@@ -222,8 +224,8 @@ public class RecipePane extends JPanel {
     }
 
     private void createUserFile(Path filePath, String name) throws IOException{
-        Files.copy(filePath, RESOURCES_PATH.resolve(name), StandardCopyOption.REPLACE_EXISTING);
-        userFile = RESOURCES_PATH.resolve(name);
+        Files.copy(filePath, RESOURCES_PATH.resolve(name + ".png"), StandardCopyOption.REPLACE_EXISTING);
+        userFile = RESOURCES_PATH.resolve(name + ".png");
         recipe.setImage(ImageIO.read(userFile.toFile()));
     }
 
