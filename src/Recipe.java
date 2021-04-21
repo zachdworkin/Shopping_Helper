@@ -65,9 +65,13 @@ public class Recipe {
         String currentLine = scanner.nextLine();
         while (!currentLine.equals("")) {
             String[] ingredientComponents = currentLine.split(" ");
+            StringBuilder ingredientName = new StringBuilder(ingredientComponents[2]);
+            if (ingredientComponents.length > 3)
+               for (int i = 3; i < ingredientComponents.length; i++)
+                   ingredientName.append(" ").append(ingredientComponents[i]);
+
             recipe.addIngredient(new Ingredient(ingredientComponents[1].replace(":", ""),
-                    Double.parseDouble(ingredientComponents[0]),
-                    ingredientComponents[2]));
+                    Double.parseDouble(ingredientComponents[0]), ingredientName.toString()));
             currentLine = scanner.nextLine();
         }
 

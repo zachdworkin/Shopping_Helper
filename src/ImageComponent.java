@@ -12,7 +12,7 @@ class ImageComponent extends JComponent {
 
     public ImageComponent() throws IOException {
         resourcesDirectory = Path.of((new File(System.getProperty("user.dir"))).getAbsolutePath()).resolve("resources");
-        this.image = getImageFromFile("cook_book.png");
+        setImage(getImageFromFile("cook_book.png"));
     }
 
     public Image getImage() { return this.image;}

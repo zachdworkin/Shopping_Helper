@@ -61,7 +61,7 @@ public class RecipeTest {
             ArrayList<String> newInstructions = newRecipe.getInstructions();
             ArrayList<String> oldInstructions = recipe.getInstructions();
             for (int i = 0; i < oldInstructions.size(); i++) {
-                assertEquals(oldInstructions.get(i), newInstructions.get(i));
+                assertEquals("Step " + (i + 1) + ": " + oldInstructions.get(i), newInstructions.get(i));
             }
         } else {
             fail();

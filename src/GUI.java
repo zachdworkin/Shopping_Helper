@@ -74,7 +74,7 @@ public class GUI extends JFrame {
     }
 
     private void initImageComponent() {
-        currentImage = 0;
+        currentImage = 1;
         try {
             imageComponent = new ImageComponent();
         } catch (IOException ioe) {
@@ -268,7 +268,6 @@ public class GUI extends JFrame {
             if (direction == 1) {
                 if (++currentImage >= recipes.size())
                     currentImage = 0;
-
 
             } else if (direction == -1) {
                 if (--currentImage < 0)
