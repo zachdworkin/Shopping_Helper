@@ -218,7 +218,7 @@ public class RecipePane extends JPanel {
                 return;
             }
 
-            image.setIcon(new ImageIcon(recipe.getImage()));
+            image.setIcon(new ImageIcon(ImageComponent.scale(recipe.getImage(), 400, 400)));
             image.setVisible(true);
         }
     }
@@ -273,7 +273,7 @@ public class RecipePane extends JPanel {
     private class InputIngredient extends AbstractAction {
         final Component parent;
         private final Object[] measureTypes = new Object[]{"Pound(s)", "Ounce(s)", "Teaspoon(s)", "Tablespoon(s)",
-                "Breast(s)", "Fillet(s)", "Chop(s)", "Bag(s)", "Cup(s)"};
+                "Breast(s)", "Fillet(s)", "Chop(s)", "Bag(s)", "Cup(s)", "Unit(s)"};
 
         public InputIngredient(Component parent) {
             this.parent = parent;

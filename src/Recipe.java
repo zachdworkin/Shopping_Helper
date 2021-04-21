@@ -78,14 +78,16 @@ public class Recipe {
         if (recipeFile.createNewFile()) {
             FileWriter writer = new FileWriter(recipeFile);
             writer.write(name + "\n");
-            writer.write("\ningredients\n");
+            writer.write("\nIngredients\n");
             for (Ingredient ingredient : ingredients) {
                 writer.write(ingredient.toString() + "\n");
             }
 
-            writer.write("\ninstructions\n");
+            writer.write("\nInstructions\n");
+            int i = 1;
             for (String instruction : instructions) {
-                writer.write(instruction + "\n");
+                writer.write("Step " + i + ": " + instruction + "\n");
+                i++;
             }
 
             writer.close();

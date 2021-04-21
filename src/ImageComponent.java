@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 class ImageComponent extends JComponent {
     private Image image;
@@ -17,7 +18,7 @@ class ImageComponent extends JComponent {
     public Image getImage() { return this.image;}
 
     public void setImage(Image image) {
-        this.image = image;
+        this.image = scale(image, 800, 800);
     }
 
     public Path getResourcesDirectory() {
@@ -28,13 +29,54 @@ class ImageComponent extends JComponent {
         return ImageIO.read(resourcesDirectory.resolve(image).toFile());
     }
 
+    private ArrayList<String> lineParser(String line) {
+        ArrayList<String> lines = new ArrayList<>();
+        if (line.length() > 80) {
+            int line_count = 1;
+            int step_num = 1;
+            String[] ln = line.split(" ");
+            StringBuilder newLine = new StringBuilder();
+            String previous_word = "";
+
+            for (String word : ln) {
+                if (previous_word.equals("Step")) step_num = Integer.parseInt(word.substring(0, word.length() - 1));
+                if (word.equals("Step")) line_count = 1;
+
+                if (newLine.length() + word.length() < 80) {
+                    newLine.append(word).append(" ");
+                } else {
+                    lines.add(newLine.append("\n").toString());
+                    newLine = new StringBuilder();
+                    if (++line_count > 1) {
+                        newLine.append("            ");
+                        if (step_num >= 10) {
+                            newLine.append("  ");
+                        }
+
+                        newLine.append(word).append(" ");
+                    }
+                }
+
+                previous_word = word;
+            }
+
+            lines.add(newLine.append("\n").toString());
+        } else {
+            lines.add(line + "\n");
+        }
+
+        return lines;
+    }
+
     public void createImageFromText(Path imagePath) throws IOException {
-        int width = 1000;
-        int height = 1000;
+        int width = 800;
+        int height = 800;
+        int fontSize = 16;
+        int nextLinePosition = fontSize * 2 + 10;
 
         BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
-        Font font = new Font("Arial", Font.PLAIN, 48);
+        Font font = new Font("Times New Roman", Font.PLAIN, fontSize);
         g2d.setFont(font);
         g2d.dispose();
 
@@ -52,21 +94,20 @@ class ImageComponent extends JComponent {
         g2d.setColor(Color.BLACK);
         File file = imagePath.toFile();
 
-        BufferedReader br;
-        int nextLinePosition=100;
-        int fontSize = 48;
-        br = new BufferedReader(new FileReader(file));
-
+        BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
         while ((line = br.readLine()) != null) {
-            g2d.drawString(line, 0, nextLinePosition);
-            nextLinePosition = nextLinePosition + fontSize;
+            ArrayList<String> lines = lineParser(line);
+            for (String ln : lines) {
+                g2d.drawString(ln, 0, nextLinePosition);
+                nextLinePosition = nextLinePosition + fontSize;
+            }
         }
-        br.close();
 
+        br.close();
         g2d.dispose();
         String fileName = imagePath.toFile().getName();
-        String newFileName = fileName.substring(0, fileName.length() - 7) + ".png";
+        String newFileName = fileName.substring(0, fileName.length() - "recipe".length()) + "png";
         ImageIO.write(img, "png", resourcesDirectory.resolve("recipeCardImages").resolve(newFileName).toFile());
     }
 
@@ -74,5 +115,25 @@ class ImageComponent extends JComponent {
         if (image == null) return;
 
         g.drawImage(image, 0, 0, null);
+    }
+
+    public static Image scale(Image image, int width, int height){
+        double displayAngle = Math.atan2(height, width);
+        if (displayAngle < 0) {
+            displayAngle += (2 * Math.PI);
+        }
+        double imageAngle = Math.atan2(image.getHeight(null), image.getWidth(null));
+        if (imageAngle < 0) {
+            imageAngle += (2 * Math.PI);
+        }
+        Image scaleImage;
+
+        if (displayAngle >= imageAngle) {
+            //Giving -1 keeps the Image's original aspect ratio.
+            scaleImage = image.getScaledInstance(width, -1, Image.SCALE_DEFAULT);
+        } else {
+            scaleImage = image.getScaledInstance(-1, height, Image.SCALE_DEFAULT);
+        }
+        return scaleImage;
     }
 }

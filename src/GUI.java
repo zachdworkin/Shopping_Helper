@@ -171,15 +171,23 @@ public class GUI extends JFrame {
             }
 
             for(Recipe recipe : recipes) {
-                String name = recipe.getName() + ".png";
+                String png = recipe.getName() + ".png";
+                String rcp = recipe.getName() + ".recipe";
                 try {
-                    recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(name).toFile()));
+                    recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(png).toFile()));
                 } catch (IOException ioe) {
-                    JOptionPane.showMessageDialog(null, "Recipe Image " + name + " Not Found.");
+                    JOptionPane.showMessageDialog(null, "Recipe Image " + png + " Not Found.");
                 }
 
+                if (!imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(png).getFileName().toFile().isFile()) {
+                    try {
+                        imageComponent.createImageFromText(imageComponent.getResourcesDirectory().resolve("recipes").resolve(rcp));
+                    } catch (IOException ioe) {
+                        JOptionPane.showMessageDialog(null, "Could not generate recipe instructions image for " + rcp + ".");
+                    }
+                }
                 try {
-                    recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(name + ".png").toFile()));
+                    recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(png).toFile()));
                 } catch (IOException ioe) {
                     JOptionPane.showMessageDialog(null, "Recipe Image Card Not Found.");
                 }
