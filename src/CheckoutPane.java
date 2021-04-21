@@ -1,9 +1,14 @@
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 
 public class CheckoutPane extends JPanel {
     private final ArrayList<Recipe> recipes;
+    private final JPanel ingredientsPanel;
+
     public CheckoutPane(ArrayList<Recipe> recipes) {
+        this.setLayout(new FlowLayout());
+        this.ingredientsPanel = new JPanel();
         this.recipes = recipes;
         initAll();
     }
@@ -13,10 +18,19 @@ public class CheckoutPane extends JPanel {
     }
 
     private void initIngredients() {
+        ingredientsPanel.setPreferredSize(new Dimension(250, 250));
         for (Recipe recipes : recipes) {
-            for (Ingredient ing : recipes.getIngredients()) {
-                add(new JLabel(ing.toString()));
+            for (Ingredient ingredient : recipes.getIngredients()) {
+                ingredientsPanel.add(new JLabel(ingredient.toString()));
             }
         }
+
+        add(ingredientsPanel);
+        render();
+    }
+
+    private void render() {
+        revalidate();
+        repaint();
     }
 }

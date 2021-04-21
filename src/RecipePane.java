@@ -21,8 +21,6 @@ import static javax.swing.JOptionPane.*;
 public class RecipePane extends JPanel {
     private final Path RESOURCES_PATH = Path.of((new File(System.getProperty("user.dir"))).getAbsolutePath()).resolve("resources");
 
-    private Path userFile;
-
     private final Recipe recipe;
     private boolean finalized;
 
@@ -31,7 +29,7 @@ public class RecipePane extends JPanel {
     private final JButton addInstruction;
 
     private final JLabel displayRecipeName;
-    private JLabel image;
+    private final JLabel image;
 
     ArrayList<JLabel> ingredientLabels;
     ArrayList<JLabel> instructionLabels;
@@ -225,7 +223,7 @@ public class RecipePane extends JPanel {
 
     private void createUserFile(Path filePath, String name) throws IOException{
         Files.copy(filePath, RESOURCES_PATH.resolve(name + ".png"), StandardCopyOption.REPLACE_EXISTING);
-        userFile = RESOURCES_PATH.resolve(name + ".png");
+        Path userFile = RESOURCES_PATH.resolve(name + ".png");
         recipe.setImage(ImageIO.read(userFile.toFile()));
     }
 

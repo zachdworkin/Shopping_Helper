@@ -65,12 +65,12 @@ public class GUI extends JFrame {
     }
 
     private void initializeLayout() {
-        setLayout(new GridBagLayout());
+        setLayout(new FlowLayout());
         this.gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(2, 0, 0, 2);
+        gbc.anchor = GridBagConstraints.NORTHWEST;
     }
 
     private void initImageComponent() {
@@ -145,8 +145,6 @@ public class GUI extends JFrame {
 
                     recipes.add(recipe);
                 }
-
-                initializeDialog();
             }
         });
     }
@@ -344,20 +342,38 @@ public class GUI extends JFrame {
     }
 
     private class CheckoutAction extends AbstractAction {
-        private JFrame parent;
+        private final JFrame parent;
         public CheckoutAction(JFrame parent) {
             this.parent = parent;
         }
 
         public void actionPerformed(ActionEvent event) {
-            parent.removeAll();
+            if (cart.isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "No items in cart, cannot checkout.");
+                return;
+            }
+
             ArrayList<Recipe> selectedRecipes = new ArrayList<>();
             for (Recipe recipe : recipes) {
                 if (cart.contains(recipe.getName()))
                     selectedRecipes.add(recipe);
             }
 
-            parent.add(new CheckoutPane(selectedRecipes));
+            JDialog checkoutDialog = new JDialog();
+            Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+            checkoutDialog.setSize(size.width, size.height);
+
+            CheckoutPane checkoutPane = new CheckoutPane(selectedRecipes);
+            checkoutDialog.add(checkoutPane);
+
+            checkoutDialog.addWindowListener(new WindowAdapter() {
+                public void windowClosing(WindowEvent e){
+                    System.exit(0);
+                }
+            });
+
+            checkoutDialog.setVisible(true);
+
         }
     }
 }
