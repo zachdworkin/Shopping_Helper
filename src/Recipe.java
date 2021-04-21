@@ -11,6 +11,7 @@ public class Recipe {
     private final ArrayList<String> instructions;
     private Image image;
     private Image textImage;
+    private boolean selected;
 
     public Recipe(String name) {
         this.name = name;
@@ -18,6 +19,7 @@ public class Recipe {
         this.instructions = new ArrayList<>();
         this.image = null;
         this.textImage = null;
+        this.selected = false;
     }
 
     public ArrayList<String> getInstructions() {
@@ -51,6 +53,10 @@ public class Recipe {
     public void setImage(Image image) {
         this.image = image;
     }
+
+    public boolean isSelected() {return selected;}
+
+    public void setSelected(boolean value) {this.selected = value;}
 
     public static Recipe readFile(File recipeFile) throws IOException {
         Scanner scanner = new Scanner(recipeFile);

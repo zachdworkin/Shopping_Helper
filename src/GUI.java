@@ -8,16 +8,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class GUI extends JFrame {
-
     private ArrayList<Recipe> recipes;
+    private ArrayList<String> cart;
 
     private JPanel buttonPanel;
+    private JPanel cartPanel;
     private RecipePane recipePanel;
 
     private final JButton inputRecipe = new JButton("Input Recipe");
     private final JButton next = new JButton("Next");
     private final JButton previous = new JButton("Previous");
     private final JButton viewRecipe = new JButton("View Recipe");
+    private final JButton selected = new JButton("Select");
 
     private JDialog dialog;
 
@@ -54,6 +56,7 @@ public class GUI extends JFrame {
         initializeLayout();
         initImageComponent();
         initializeButtonPanel();
+        initializeCart();
         initializeDialog();
         initializeKeystrokeActions();
         addActionListeners();
@@ -88,7 +91,6 @@ public class GUI extends JFrame {
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         gbc.gridx = 0;
-        gbc.gridy = 0;
         buttonPanel.add(inputRecipe, gbc);
         gbc.gridy++;
         buttonPanel.add(viewRecipe, gbc);
@@ -96,9 +98,22 @@ public class GUI extends JFrame {
         buttonPanel.add(next);
         gbc.gridy++;
         buttonPanel.add(previous);
+        gbc.gridy++;
+        buttonPanel.add(selected);
         gbc.gridx = 1;
         gbc.gridy = 0;
         this.getContentPane().add(buttonPanel, gbc);
+    }
+
+    private void initializeCart() {
+        cartPanel = new JPanel();
+        cartPanel.setPreferredSize(new Dimension(250, 250));
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        this.getContentPane().add(cartPanel, gbc);
+
+        cartPanel.add(new JLabel(createCartItem("My Cart:")));
+
     }
 
     private void initializeDialog() {
@@ -150,11 +165,13 @@ public class GUI extends JFrame {
         next.addActionListener(nextFrameAction);
         previous.addActionListener(previousFrameAction);
         viewRecipe.addActionListener(new ViewRecipeAction());
+        selected.addActionListener(new SelectRecipeAction());
     }
 
     private void initializeRecipes() {
         Path recipeResourcesDirectory = imageComponent.getResourcesDirectory().resolve("recipes");
         recipes = new ArrayList<>();
+        cart = new ArrayList<>();
 
         File[] recipeFiles = recipeResourcesDirectory.toFile().listFiles();
         if (recipeFiles == null) {
@@ -222,6 +239,22 @@ public class GUI extends JFrame {
             viewRecipe.setText("View Recipe Image");
     }
 
+    private String createCartItem(String item) {
+        int MAX_CART_ITEM_CHARACTERS = 32;
+        return item + " ".repeat(Math.max(0, MAX_CART_ITEM_CHARACTERS - item.length()));
+    }
+
+    private void updateCart() {
+        for (Component comp : cartPanel.getComponents())
+            cartPanel.remove(comp);
+
+        cartPanel.add(new JLabel(createCartItem("My Cart:")));
+        for (String item : cart)
+            cartPanel.add(new JLabel(createCartItem(item)));
+
+        render();
+    }
+
     private class StepAction extends AbstractAction {
         private final int direction;
 
@@ -240,10 +273,16 @@ public class GUI extends JFrame {
                     currentImage = recipes.size() - 1;
             }
 
+            Recipe currentRecipe = recipes.get(currentImage);
             if (!viewRecipe.getText().equals("View Recipe Image"))
-                imageComponent.setImage(recipes.get(currentImage).getImage());
+                imageComponent.setImage(currentRecipe.getImage());
             else
-                imageComponent.setImage(recipes.get(currentImage).getTextImage());
+                imageComponent.setImage(currentRecipe.getTextImage());
+
+            if (currentRecipe.isSelected())
+                selected.setText("Selected");
+            else
+                selected.setText("Select");
 
             render();
         }
@@ -277,6 +316,26 @@ public class GUI extends JFrame {
 
         public void actionPerformed(ActionEvent event) {
             dialog.setVisible(true);
+        }
+    }
+
+    private class SelectRecipeAction extends AbstractAction {
+        public SelectRecipeAction() {
+
+        }
+
+        public void actionPerformed(ActionEvent event) {
+            Recipe currentRecipe = recipes.get(currentImage);
+            currentRecipe.setSelected(!currentRecipe.isSelected());
+            if (currentRecipe.isSelected()){
+                selected.setText("Selected");
+                cart.add(currentRecipe.getName());
+            }else {
+                cart.remove(currentRecipe.getName());
+                selected.setText("Select");
+            }
+
+            updateCart();
         }
     }
 }
