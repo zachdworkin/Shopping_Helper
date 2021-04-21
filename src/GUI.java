@@ -20,6 +20,7 @@ public class GUI extends JFrame {
     private final JButton previous = new JButton("Previous");
     private final JButton viewRecipe = new JButton("View Recipe");
     private final JButton selected = new JButton("Select");
+    private final JButton checkout = new JButton("Checkout");
 
     private JDialog dialog;
 
@@ -100,6 +101,8 @@ public class GUI extends JFrame {
         buttonPanel.add(previous);
         gbc.gridy++;
         buttonPanel.add(selected);
+        gbc.gridy++;
+        buttonPanel.add(checkout);
         gbc.gridx = 1;
         gbc.gridy = 0;
         this.getContentPane().add(buttonPanel, gbc);
@@ -166,6 +169,7 @@ public class GUI extends JFrame {
         previous.addActionListener(previousFrameAction);
         viewRecipe.addActionListener(new ViewRecipeAction());
         selected.addActionListener(new SelectRecipeAction());
+        checkout.addActionListener(new CheckoutAction(this));
     }
 
     private void initializeRecipes() {
@@ -336,6 +340,24 @@ public class GUI extends JFrame {
             }
 
             updateCart();
+        }
+    }
+
+    private class CheckoutAction extends AbstractAction {
+        private JFrame parent;
+        public CheckoutAction(JFrame parent) {
+            this.parent = parent;
+        }
+
+        public void actionPerformed(ActionEvent event) {
+            parent.removeAll();
+            ArrayList<Recipe> selectedRecipes = new ArrayList<>();
+            for (Recipe recipe : recipes) {
+                if (cart.contains(recipe.getName()))
+                    selectedRecipes.add(recipe);
+            }
+
+            parent.add(new CheckoutPane(selectedRecipes));
         }
     }
 }

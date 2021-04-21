@@ -144,7 +144,7 @@ public class RecipePane extends JPanel {
                     return;
                 }
 
-                image.setIcon(new ImageIcon(recipe.getImage()));
+                image.setIcon(new ImageIcon(ImageComponent.scale(recipe.getImage(), 400, 400)));
                 image.setVisible(true);
             }
         });
