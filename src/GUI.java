@@ -108,6 +108,8 @@ public class GUI extends JFrame {
         buttonPanel.add(selected);
         gbc.gridy++;
         buttonPanel.add(checkout);
+        gbc.gridy++;
+        buttonPanel.add(exit);
         gbc.gridx = 1;
         gbc.gridy = 0;
         this.getContentPane().add(buttonPanel, gbc);
@@ -173,6 +175,7 @@ public class GUI extends JFrame {
         viewRecipe.addActionListener(new ViewRecipeAction());
         selected.addActionListener(new SelectRecipeAction());
         checkout.addActionListener(new CheckoutAction(this));
+        exit.addActionListener(new ExitAction());
     }
 
     private void initializeRecipes() {
@@ -454,6 +457,7 @@ public class GUI extends JFrame {
             buttonPanel.remove(selected);
             buttonPanel.remove(inputRecipe);
             buttonPanel.remove(checkout);
+            buttonPanel.remove(exit);
             parent.remove(cartPanel);
         }
 
