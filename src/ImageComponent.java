@@ -12,21 +12,16 @@ class ImageComponent extends JComponent {
 
     public ImageComponent() throws IOException {
         resourcesDirectory = Path.of((new File(System.getProperty("user.dir"))).getAbsolutePath()).resolve("resources");
-        setImage(getImageFromFile("cook_book.png"));
     }
 
     public Image getImage() { return this.image;}
 
     public void setImage(Image image) {
-        this.image = scale(image, 800, 800);
+        this.image = scale(image, 1500, 1000);
     }
 
     public Path getResourcesDirectory() {
         return resourcesDirectory;
-    }
-
-    public Image getImageFromFile(String image) throws IOException {
-        return ImageIO.read(resourcesDirectory.resolve(image).toFile());
     }
 
     private ArrayList<String> lineParser(String line) {
@@ -42,7 +37,8 @@ class ImageComponent extends JComponent {
                 if (previous_word.equals("Step")) step_num = Integer.parseInt(word.substring(0, word.length() - 1));
                 if (word.equals("Step")) line_count = 1;
 
-                if (newLine.length() + word.length() < 80) {
+                int MAX_STRING_LENGTH = 100;
+                if (newLine.length() + word.length() < MAX_STRING_LENGTH) {
                     newLine.append(word).append(" ");
                 } else {
                     lines.add(newLine.append("\n").toString());
@@ -118,22 +114,6 @@ class ImageComponent extends JComponent {
     }
 
     public static Image scale(Image image, int width, int height){
-        double displayAngle = Math.atan2(height, width);
-        if (displayAngle < 0) {
-            displayAngle += (2 * Math.PI);
-        }
-        double imageAngle = Math.atan2(image.getHeight(null), image.getWidth(null));
-        if (imageAngle < 0) {
-            imageAngle += (2 * Math.PI);
-        }
-        Image scaleImage;
-
-        if (displayAngle >= imageAngle) {
-            //Giving -1 keeps the Image's original aspect ratio.
-            scaleImage = image.getScaledInstance(width, -1, Image.SCALE_DEFAULT);
-        } else {
-            scaleImage = image.getScaledInstance(-1, height, Image.SCALE_DEFAULT);
-        }
-        return scaleImage;
+        return image.getScaledInstance(width, height, Image.SCALE_DEFAULT);
     }
 }

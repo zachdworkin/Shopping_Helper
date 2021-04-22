@@ -67,6 +67,7 @@ public class GUI extends JFrame {
         initializeKeystrokeActions();
         addActionListeners();
         initializeRecipes();
+        render();
     }
 
     private void initializeLayout() {
@@ -177,12 +178,7 @@ public class GUI extends JFrame {
         checkout.addActionListener(new CheckoutAction(this));
         exit.addActionListener(new ExitAction());
     }
-
-    private void initializeRecipes() {
-        Path recipeResourcesDirectory = imageComponent.getResourcesDirectory().resolve("recipes");
-        recipes = new ArrayList<>();
-        cart = new ArrayList<>();
-
+    private void findRecipeFiles(Path recipeResourcesDirectory) {
         File[] recipeFiles = recipeResourcesDirectory.toFile().listFiles();
         if (recipeFiles == null) {
             JOptionPane.showMessageDialog(null, "No Recipes found");
@@ -196,36 +192,62 @@ public class GUI extends JFrame {
             } catch (IOException ioe) {
                 JOptionPane.showMessageDialog(null, "Recipe " + currentFile.toString() + "not found.");
             }
+        }
+    }
 
-            for(Recipe recipe : recipes) {
-                String png = recipe.getName() + ".png";
-                String rcp = recipe.getName() + ".recipe";
-                try {
-                    recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(png).toFile()));
-                } catch (IOException ioe) {
-                    JOptionPane.showMessageDialog(null, "Recipe Image " + png + " Not Found.");
-                }
+    private void createTextBacks(String rcp) {
+        try {
+            imageComponent.createImageFromText(imageComponent.getResourcesDirectory().resolve("recipes").resolve(rcp));
+        } catch (IOException ioe) {
+            JOptionPane.showMessageDialog(null, "Could not generate recipe instructions image for " + rcp + ".");
+        }
+    }
 
-                if (!imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(png).getFileName().toFile().isFile()) {
-                    try {
-                        imageComponent.createImageFromText(imageComponent.getResourcesDirectory().resolve("recipes").resolve(rcp));
-                    } catch (IOException ioe) {
-                        JOptionPane.showMessageDialog(null, "Could not generate recipe instructions image for " + rcp + ".");
-                    }
-                }
-                try {
-                    recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(png).toFile()));
-                } catch (IOException ioe) {
-                    JOptionPane.showMessageDialog(null, "Recipe Image Card Not Found.");
-                }
+    private void setRecipeImageBacks() {
+        for(Recipe recipe : recipes) {
+            String png = recipe.getName() + ".png";
+            String rcp = recipe.getName() + ".recipe";
+
+            try {
+                recipe.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve(png).toFile()));
+            } catch (IOException ioe) {
+                JOptionPane.showMessageDialog(null, "Recipe Image " + png + " Not Found.");
+            }
+
+            if (!imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(png).getFileName().toFile().isFile()) {
+                createTextBacks(rcp);
+            }
+
+            try {
+                recipe.setTextImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("recipeCardImages").resolve(png).toFile()));
+            } catch (IOException ioe) {
+                JOptionPane.showMessageDialog(null, "Recipe Image Card Not Found.");
             }
         }
+    }
+
+    private void setCookBookAsFirstImage() {
+        for (Recipe rcp : recipes) {
+            if (rcp.getName().equals("cook_book")) currentImage = recipes.indexOf(rcp);
+        }
+
+        imageComponent.setImage(recipes.get(currentImage).getImage());
+    }
+
+    private void initializeRecipes() {
+        Path recipeResourcesDirectory = imageComponent.getResourcesDirectory().resolve("recipes");
+        recipes = new ArrayList<>();
+        cart = new ArrayList<>();
+
+        findRecipeFiles(recipeResourcesDirectory);
+        setRecipeImageBacks();
+        setCookBookAsFirstImage();
     }
 
     private void render() {
         if (imageComponent.getImage() == null) {
             JOptionPane.showMessageDialog(null, "Recipe Image Not Found. Using default image");
-            if (!viewRecipe.getText().equals("View Recipe Image"))
+            if (!viewRecipe.getText().equals("View Recipe"))
                 try {
                     imageComponent.setImage(ImageIO.read(imageComponent.getResourcesDirectory().resolve("DefaultImageFile").resolve("default.png").toFile()));
                 } catch (IOException ioe) {
@@ -243,10 +265,10 @@ public class GUI extends JFrame {
     }
 
     private void updateViewImageButton() {
-        if (viewRecipe.getText().equals("View Recipe Image"))
-            viewRecipe.setText("View Recipe");
+        if (viewRecipe.getText().equals("View Recipe"))
+            viewRecipe.setText("View Image");
         else
-            viewRecipe.setText("View Recipe Image");
+            viewRecipe.setText("View Recipe");
     }
 
     private String createCartItem(String item) {
@@ -351,13 +373,13 @@ public class GUI extends JFrame {
             }
 
             Recipe currentRecipe = recipes.get(currentImage);
-            if (!viewRecipe.getText().equals("View Recipe Image"))
+            if (!viewRecipe.getText().equals("View Image"))
                 imageComponent.setImage(currentRecipe.getImage());
             else
                 imageComponent.setImage(currentRecipe.getTextImage());
 
             if (currentRecipe.isSelected())
-                selected.setText("Selected");
+                selected.setText("Unselect");
             else
                 selected.setText("Select");
 
@@ -372,7 +394,7 @@ public class GUI extends JFrame {
 
         public void actionPerformed(ActionEvent event) {
             Recipe currentRecipe = recipes.get(currentImage);
-            if (viewRecipe.getText().equals("View Recipe Image")) {
+            if (viewRecipe.getText().equals("View Image")) {
                 imageComponent.setImage(currentRecipe.getImage());
             } else {
                 try {
@@ -405,7 +427,7 @@ public class GUI extends JFrame {
             Recipe currentRecipe = recipes.get(currentImage);
             currentRecipe.setSelected(!currentRecipe.isSelected());
             if (currentRecipe.isSelected()){
-                selected.setText("Selected");
+                selected.setText("UnSelect");
                 cart.add(currentRecipe.getName());
             }else {
                 cart.remove(currentRecipe.getName());
