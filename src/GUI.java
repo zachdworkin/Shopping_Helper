@@ -3,7 +3,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
@@ -21,6 +23,9 @@ public class GUI extends JFrame {
     private final JButton viewRecipe = new JButton("View Recipe");
     private final JButton selected = new JButton("Select");
     private final JButton checkout = new JButton("Checkout");
+    private final JButton printShoppingList = new JButton("Print Shopping List");
+    private final JButton printInstructions = new JButton("Print Instructions");
+    private final JButton exit = new JButton("Exit");
 
     private JDialog dialog;
 
@@ -257,6 +262,74 @@ public class GUI extends JFrame {
         render();
     }
 
+    private void writeFile(File file, String words) throws FileNotFoundException {
+        PrintWriter out = new PrintWriter(file);
+        out.write(words);
+        out.close();
+    }
+
+
+    private ArrayList<String> lineParser(String line) {
+        ArrayList<String> lines = new ArrayList<>();
+        if (line.length() > 80) {
+            int line_count = 1;
+            int step_num = 1;
+            String[] ln = line.split(" ");
+            StringBuilder newLine = new StringBuilder();
+            String previous_word = "";
+
+            for (String word : ln) {
+                if (previous_word.equals("Step")) step_num = Integer.parseInt(word.substring(0, word.length() - 1));
+                if (word.equals("Step")) line_count = 1;
+
+                if (newLine.length() + word.length() < 80) {
+                    newLine.append(word).append(" ");
+                } else {
+                    lines.add(newLine.append("\n").toString());
+                    newLine = new StringBuilder();
+                    if (++line_count > 1) {
+                        newLine.append("        ");
+                        if (step_num >= 10) {
+                            newLine.append(" ");
+                        }
+
+                        newLine.append(word).append(" ");
+                    }
+                }
+
+                previous_word = word;
+            }
+
+            lines.add(newLine.append("\n").toString());
+        } else {
+            lines.add(line + "\n");
+        }
+
+        return lines;
+    }
+
+    private void generateShoppingList(File file) throws FileNotFoundException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("GO TO THE STORE FOO!");
+        writeFile(file, sb.toString());
+    }
+
+    private void exportInstructions(File file) throws FileNotFoundException {
+        StringBuilder sb = new StringBuilder();
+        for (Recipe rcp : recipes) {
+            sb.append(rcp.getName()).append("\n");
+            for (String line : rcp.getInstructions()) {
+                for (String shorterLine : lineParser(line)) {
+                    sb.append(shorterLine);
+                }
+            }
+
+            sb.append("\n\n");
+        }
+
+        writeFile(file, sb.toString());
+    }
+
     private class StepAction extends AbstractAction {
         private final int direction;
 
@@ -358,21 +431,86 @@ public class GUI extends JFrame {
                     selectedRecipes.add(recipe);
             }
 
-            JDialog checkoutDialog = new JDialog();
-            Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
-            checkoutDialog.setSize(size.width, size.height);
 
-            CheckoutPane checkoutPane = new CheckoutPane(selectedRecipes);
-            checkoutDialog.add(checkoutPane);
+            recipes = selectedRecipes;
+            resetImage();
+            initNewButtonPanel();
 
-            checkoutDialog.addWindowListener(new WindowAdapter() {
-                public void windowClosing(WindowEvent e){
-                    System.exit(0);
-                }
-            });
+            render();
+        }
 
-            checkoutDialog.setVisible(true);
+        private void resetImage() {
+            currentImage = 0;
+            imageComponent.setImage(recipes.get(currentImage).getImage());
+        }
 
+        private void initNewButtonPanel() {
+            removeButtons();
+            addNewPrintButtons();
+            addNewActionListeners();
+        }
+
+        private void removeButtons() {
+            buttonPanel.remove(selected);
+            buttonPanel.remove(inputRecipe);
+            buttonPanel.remove(checkout);
+            parent.remove(cartPanel);
+        }
+
+        private void addNewPrintButtons() {
+            buttonPanel.add(printShoppingList);
+            buttonPanel.add(printInstructions);
+            buttonPanel.add(exit);
+        }
+
+        private void addNewActionListeners() {
+            printShoppingList.addActionListener(new PrintShoppingListAction());
+            printInstructions.addActionListener(new PrintInstructionsAction());
+            exit.addActionListener(new ExitAction());
+        }
+    }
+
+    private class PrintShoppingListAction extends AbstractAction {
+        public PrintShoppingListAction() {}
+
+        public void actionPerformed(ActionEvent event) {
+            FileDialog fd = new FileDialog(GUI.this, "Select where to save shopping list", FileDialog.SAVE);
+            fd.setFile("shopping_list.txt");
+            fd.setVisible(true);
+            String name = fd.getDirectory() + fd.getFile();
+            if (!name.endsWith(".txt")) name = name + ".txt";
+            File file = new File(name);
+            try {
+                generateShoppingList(file);
+            } catch (IOException ioe) {
+                JOptionPane.showMessageDialog(null, "Could not Generate Shopping List.");
+            }
+        }
+    }
+
+    private class PrintInstructionsAction extends AbstractAction {
+        public PrintInstructionsAction() {}
+
+        public void actionPerformed(ActionEvent event) {
+            FileDialog fd = new FileDialog(GUI.this, "Select where to save instructions", FileDialog.SAVE);
+            fd.setFile("instructions.txt");
+            fd.setVisible(true);
+            String name = fd.getDirectory() + fd.getFile();
+            if (!name.endsWith(".txt")) name = name + ".txt";
+            File file = new File(name);
+            try {
+                exportInstructions(file);
+            } catch (FileNotFoundException exception) {
+                JOptionPane.showMessageDialog(null, "Could not Generate Shopping List.");
+            }
+        }
+    }
+
+    private static class ExitAction extends AbstractAction {
+        public ExitAction() {}
+
+        public void actionPerformed(ActionEvent event) {
+            System.exit(0);
         }
     }
 }
