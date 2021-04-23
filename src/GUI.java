@@ -10,6 +10,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class GUI extends JFrame {
+    public static final Object[] MEASURE_TYPES = new Object[]{"Pound(s)", "Ounce(s)", "Teaspoon(s)", "Tablespoon(s)",
+            "Breast(s)", "Fillet(s)", "Chop(s)", "Bag(s)", "Cup(s)", "Gram(s)", "Unit(s)"};
+
     private ArrayList<Recipe> recipes;
     private ArrayList<String> cart;
 

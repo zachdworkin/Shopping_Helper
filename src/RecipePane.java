@@ -270,8 +270,6 @@ public class RecipePane extends JPanel {
 
     private class InputIngredient extends AbstractAction {
         final Component parent;
-        private final Object[] measureTypes = new Object[]{"Pound(s)", "Ounce(s)", "Teaspoon(s)", "Tablespoon(s)",
-                "Breast(s)", "Fillet(s)", "Chop(s)", "Bag(s)", "Cup(s)", "Unit(s)"};
 
         public InputIngredient(Component parent) {
             this.parent = parent;
@@ -306,7 +304,7 @@ public class RecipePane extends JPanel {
         private int getRecipeIngredientsFromUser() {
             JTextArea name = new JTextArea();
             JTextField number = new JTextField();
-            JComboBox<Object> measurementType = new JComboBox<>(measureTypes);
+            JComboBox<Object> measurementType = new JComboBox<>(GUI.MEASURE_TYPES);
             Object[] message = {
                     "Ingredient name",
                     name,
@@ -331,7 +329,7 @@ public class RecipePane extends JPanel {
             if (measureValue < 0)
                 return CANCEL_OPTION;
 
-            Ingredient newIngredient = new Ingredient(measureTypes[measurementType.getSelectedIndex()].toString(),
+            Ingredient newIngredient = new Ingredient(GUI.MEASURE_TYPES[measurementType.getSelectedIndex()].toString(),
                     measureValue, ingredientName);
             recipe.addIngredient(newIngredient);
             ingredientLabels.add(new JLabel("\t" + newIngredient.toString()));
