@@ -184,7 +184,7 @@ public class GUI extends JFrame {
     private void findRecipeFiles(Path recipeResourcesDirectory) {
         File[] recipeFiles = recipeResourcesDirectory.toFile().listFiles();
         if (recipeFiles == null) {
-            JOptionPane.showMessageDialog(null, "No Recipes found");
+            JOptionPane.showMessageDialog(null, "No Recipes found.");
             System.exit(1);
         }
 

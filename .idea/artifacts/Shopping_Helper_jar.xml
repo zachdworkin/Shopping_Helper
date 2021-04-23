@@ -1,0 +1,30 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Shopping_Helper:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Shopping_Helper_jar</output-path>
+    <root id="archive" name="Shopping_Helper.jar">
+      <element id="module-output" name="Shopping_Helper" />
+      <element id="directory" name="resources">
+        <element id="file-copy" path="$PROJECT_DIR$/resources/Chipotle Chicken and Rice Bowls.png" />
+        <element id="file-copy" path="$PROJECT_DIR$/resources/cook_book.png" />
+        <element id="file-copy" path="$PROJECT_DIR$/resources/Crispy Buffalo-Spiced Chicken.png" />
+        <element id="file-copy" path="$PROJECT_DIR$/resources/DEFAULT_NAME.png" />
+        <element id="file-copy" path="$PROJECT_DIR$/resources/Frank's Spicy Hot Chicken.png" />
+        <element id="directory" name="recipes">
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipes/Chipotle Chicken and Rice Bowls.recipe" />
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipes/cook_book.recipe" />
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipes/Crispy Buffalo-Spiced Chicken.recipe" />
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipes/Frank's Spicy Hot Chicken.recipe" />
+        </element>
+        <element id="directory" name="DefaultImageFile">
+          <element id="file-copy" path="$PROJECT_DIR$/resources/DefaultImageFile/default.png" />
+        </element>
+        <element id="directory" name="recipeCardImages">
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipeCardImages/Chipotle Chicken and Rice Bowls.png" />
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipeCardImages/cook_book.png" />
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipeCardImages/Crispy Buffalo-Spiced Chicken.png" />
+          <element id="file-copy" path="$PROJECT_DIR$/resources/recipeCardImages/Frank's Spicy Hot Chicken.png" />
+        </element>
+      </element>
+    </root>
+  </artifact>
+</component>
